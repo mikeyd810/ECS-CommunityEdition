@@ -7,8 +7,11 @@ FROM emcvipr/object:3.5.0.0-120520.8c29468ee8b-reduced
 RUN sed -i '/VMware/ s/$/ \&\& [ ! -e \/data\/is_community_edition ]/' /opt/storageos/bin/storageserver-partition-config.sh \
     && /usr/bin/chmod +x /opt/storageos/bin/storageserver-partition-config.sh
 
-# Set VNest useSeperateThreadPools to True
-#RUN f=/opt/storageos/conf/vnest-common-conf.xml; grep -q "object.UseSeparateThreadPools" $f || sed -i '547i \ \ \ \ \ \ \ \ <prop key="object.UseSeparateThreadPools">true</prop>' $f
+# Remove VNest useSeperateThreadPools on line 607 if present
+RUN f=/opt/storageos/conf/vnest-common-conf.xml; sed -ie '607{/object.UseSeparateThreadPools/d;}' $f
+
+# Set VNest useSeperateThreadPools to True on line 547 for ECS 3.5.0.0
+RUN f=/opt/storageos/conf/vnest-common-conf.xml; grep -q "object.UseSeparateThreadPools" $f || sed -i '547i \ \ \ \ \ \ \ \ <prop key="object.UseSeparateThreadPools">true</prop>' $f
 
 # Allow allocation of different blocks of a chunk to be stored on the same partition
 #RUN f=/opt/storageos/conf/ssm-cf-conf.xml; grep -q '<config:boolean name="allowAllocationOnIgnoredPartitions" value="true" description="If set to true, different blocks in one chunk may be allocated on the same partition"/>' $f || sed -i 's#<config:boolean name="allowAllocationOnIgnoredPartitions" value="false" description="If set to true, different blocks in one chunk may be allocated on the same partition"/>#<config:boolean name="allowAllocationOnIgnoredPartitions" value="true" description="If set to true, different blocks in one chunk may be allocated on the same partition"/>#g' /opt/storageos/conf/ssm-cf-conf.xml $f
